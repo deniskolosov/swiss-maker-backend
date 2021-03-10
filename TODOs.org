@@ -1,0 +1,19 @@
+* Backend for Swiss maker
+
+** Initial setup
+   - [X] create project
+   - [X] add integrant
+   - [X] add user.clj
+   - [X] create db, run test query
+   - [X] add seed data as in frontend state
+
+** API
+   - [ ] create routes
+     - [ ] tournament
+     - [ ] pairing
+     - [ ] players
+
+** Tests
+   - [ ] tournament
+     - [ ] crud tournament
+     - [ ] crud player
