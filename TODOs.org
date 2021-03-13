@@ -8,10 +8,11 @@
    - [X] add seed data as in frontend state
 
 ** API
-   - [ ] create routes
-     - [ ] tournament
+   - [-] create routes
+     - [X] tournament
      - [ ] pairing
      - [ ] players
+       - [ ] routes - we send tournament id and get players for that tournament
 
 ** Tests
    - [ ] tournament

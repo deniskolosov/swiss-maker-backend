@@ -1,15 +1,20 @@
 (ns swiss-maker-back.core
-  (:require [reitit.ring :as ring]
-            [ring.adapter.jetty :as jetty]
-            [integrant.core :as ig]
+  (:require [aero.core :as aero]
+            [clojure.java.io :as io]
+            [clojure.tools.logging :as log]
             [environ.core :refer [env]]
-            [swiss-maker-back.router :as router]
-            [next.jdbc :as jdbc]))
-
+            [integrant.core :as ig]
+            [next.jdbc :as jdbc]
+            [next.jdbc.connection :as njc]
+            [ring.adapter.jetty :as jetty]
+            [swiss-maker-back.router :as router])
+  (:import (com.zaxxer.hikari HikariDataSource)))
 
 (defn app
   [env]
   (router/routes env))
+
+(defmethod aero/reader 'ig/ref [_ _ value] (ig/ref value))
 
 (defmethod ig/prep-key :core/jetty
   [_ config]
@@ -18,6 +23,12 @@
 (defmethod ig/prep-key :db/postgres
   [_ config]
   (merge config {:jdbc-url (env :jdbc-database-url)}))
+
+(defmethod ig/init-key :swiss-maker-back/profile [_ profile]
+  profile)
+
+(defmethod ig/init-key :swiss-maker-back/env [_ env]
+  env)
 
 (defmethod ig/init-key :core/jetty
   [_ {:keys [handler port]}]
@@ -37,9 +48,24 @@
 (defmethod ig/init-key :db/postgres
   [_ {:keys [jdbc-url]}]
   (println "\nConfigured db")
-  (jdbc/with-options jdbc-url jdbc/snake-kebab-opts))
+  (jdbc/with-options
+    (njc/->pool HikariDataSource {:jdbcUrl jdbc-url})
+    jdbc/snake-kebab-opts))
+
+(defmethod ig/halt-key! :db/postgres
+  [_ config]
+  (.close ^HikariDataSource (:connectable config)))
+
+(defn read-config [profile]
+  (aero/read-config (io/resource "config.edn") {:profile profile}))
+
+(defn system-config [myprofile]
+  (let [profile (or myprofile (some-> (System/getenv "PROFILE") keyword) :dev)
+        _ (log/info "Using profile " profile)
+        config (read-config profile)]
+    config))
 
 (defn -main
-  [config-file]
-  (let [config (-> config-file slurp ig/read-string)]
+  []
+  (let [config (system-config nil)]
     (-> config ig/prep ig/init)))

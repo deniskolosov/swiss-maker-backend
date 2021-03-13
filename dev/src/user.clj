@@ -1,12 +1,13 @@
 (ns user
-  (:require [integrant.core :as ig]
-            [integrant.repl.state :as state]
+  (:require [aero.core :as aero]
+            [clojure.java.io :as io]
             [integrant.repl :as ig-repl]
-            [next.jdbc.sql :as sql]
-            [next.jdbc :as jdbc]))
+            [integrant.repl.state :as state]
+            [next.jdbc :as jdbc]
+            [ring.util.response :as rr]))
 
 (ig-repl/set-prep!
-  (fn [] (-> "resources/config.edn" slurp ig/read-string)))
+ (fn [] (aero/read-config (io/resource "config.edn") {:profile :dev})))
 
 
 (def go ig-repl/go)
@@ -20,9 +21,25 @@
 
 
 (comment
-  (sql/query db ["select * from tournament"])
-
   (go)
   (halt)
   (reset)
-  (reset-all))
+  (reset-all)
+
+  (def my-handler
+    [db]
+    (fn [request]
+      (let [tournament-id (-> request :parameters :path :tournament-id)]
+        (rr/not-found {:message (str "hello" tournament-id)}))))
+
+
+  (set! *print-namespace-maps* false)
+  (app {:request-method :get
+        :uri "/v1/tournaments/1"})
+
+  (with-open [conn (jdbc/get-connection db)]
+    (let [tournaments (jdbc/execute! conn ["select * from tournament"])]
+      {:tournaments tournaments}))
+
+
+  )
