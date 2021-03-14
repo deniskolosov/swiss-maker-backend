@@ -13,10 +13,9 @@
 (defn create-tournament!
   [db]
   (fn [request]
-    (let [tournament-id (str (UUID/randomUUID))
-          tournament (-> request :parameters :body)]
-      (tournament-db/insert-tournament! db (assoc tournament :tournament-id tournament-id))
-      (rr/created (str responses/base-url "/tournaments" tournament-id)))))
+    (let [tournament         (-> request :parameters :body)
+          created-tournament (tournament-db/insert-tournament! db tournament)]
+      (rr/created (str responses/base-url "/tournaments" (:tournament/id created-tournament)) created-tournament))))
 
 
 (defn get-tournament

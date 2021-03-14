@@ -3,11 +3,14 @@
             [clojure.java.io :as io]
             [integrant.repl :as ig-repl]
             [integrant.repl.state :as state]
+            [muuntaja.core :as m]
             [next.jdbc :as jdbc]
-            [ring.util.response :as rr]))
+            [next.jdbc.sql :as sql]
+            [swiss-maker-back.tournament.db :refer [insert-tournament!]]
+            [swiss-maker-back.tournament.handlers :refer [create-tournament!]]))
 
 (ig-repl/set-prep!
- (fn [] (aero/read-config (io/resource "config.edn") {:profile :dev})))
+  (fn [] (aero/read-config (io/resource "config.edn") {:profile :dev})))
 
 
 (def go ig-repl/go)
@@ -25,17 +28,28 @@
   (halt)
   (reset)
   (reset-all)
+  (jdbc/execute! db [(str "select id, name, rating, current_score from player where tournament_id = ?") 1])
 
-  (def my-handler
-    [db]
-    (fn [request]
-      (let [tournament-id (-> request :parameters :path :tournament-id)]
-        (rr/not-found {:message (str "hello" tournament-id)}))))
+
 
 
   (set! *print-namespace-maps* false)
-  (app {:request-method :get
-        :uri "/v1/tournaments/1"})
+  (m/decode "application/json" (:body (app {:request-method :post
+                                            :uri            "/v1/tournaments"
+                                            :body           {:num-of-rounds 5
+                                                             :name          "hello"}})))
+  (sql/find-by-keys db :player {:tournament_id 1})
+  (sql/find-by-keys db :tournament {:id 1})
+  (-> (sql/update! db :player {:current-score 8} (select-keys {:id "867ed4bf-4628-48f4-944d-e6b7786bfa92"} [:id]))
+      :next.jdbc/update-count
+      (pos?))
+  (-> (sql/delete! db :player {:id "867ed4bf-4628-48f4-944d-e6b7786bfa92"})
+      :next.jdbc/update-count
+      (pos?))
+
+  (sql/insert! db :tournament {:num-of-rounds 5 :name "hello"})
+  ((create-tournament! db) {:parameters {:body {:num-of-rounds 5 :name "hello"}}})
+  (:tournament/id  (insert-tournament! db {:num-of-rounds 6 :name "FFOO"}) )
 
   (with-open [conn (jdbc/get-connection db)]
     (let [tournaments (jdbc/execute! conn ["select * from tournament"])]

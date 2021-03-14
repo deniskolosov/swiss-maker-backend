@@ -36,7 +36,6 @@
 
 (defn test-system-fixture-runner [init-test-data testfunc]
   (try
-    (set! *print-namespace-maps* false)
     (go)
     (init-test-data)
     (testfunc)
@@ -45,23 +44,35 @@
 
 (defn call-api [verb path headers body]
   (let [my-port (-> @test-system :core/jetty .getConnectors first .getPort)
-        my-fn (cond
-                (= verb :get) http-client/get
-                (= verb :post) http-client/post)]
+        my-fn   (cond
+                  (= verb :get)    http-client/get
+                  (= verb :post)   http-client/post
+                  (= verb :put)    http-client/put
+                  (= verb :delete) http-client/delete)]
     (select-keys
-     (my-fn (str "http://localhost:" my-port "/" path)
-            {:as :json
-             :form-params body
-             :headers headers
-             :content-type :json
-             :throw-exceptions false
-             :coerce :always}
-            ) [:status :body])))
+      (my-fn (str "http://localhost:" my-port "/" path)
+             {:as               :json
+              :form-params      body
+              :headers          headers
+              :content-type     :json
+              :throw-exceptions true
+              :coerce           :always}
+             ) [:status :body])))
 
 
 (comment
   (go)
   (call-api :get "v1/tournaments" nil nil)
+  (call-api :post "v1/tournaments" nil {:name          "sdf"
+                                        :num-of-rounds 10})
+  (http-client/post "http://localhost:3000/v1/tournaments"
+                    {:as               :json
+                     :form-params      {:name          "hello"
+                                        :num-of-rounds 4}
+                     :headers          nil
+                     :content-type     :json
+                     :throw-exceptions true
+                     :coerce           :always} [:status :body])
   (halt)
   (test-config)
   (keys (deref test-system))
@@ -78,16 +89,21 @@
 )"])
   (jdbc/execute! db ["select * from tournament"])
 
+  (call-api :put "/v1/players/11f0fe1d-893e-4559-b280-a324d173bce6" nil {:id            "11f0fe1d-893e-4559-b280-a324d173bce6"
+                                                                         :name          "Ivan Ivanov"
+                                                                         :rating        1200
+                                                                         :current-score 5})
+
   (defn test-endpoint
     ([method uri]
      (test-endpoint method uri nil))
     ([method uri opts]
-     (let [app (-> @test-system :swiss-maker-back/app)
+     (let [app     (-> @test-system :swiss-maker-back/app)
            request (app (-> (mock/request method uri)
                             (cond-> (:body opts) (mock/json-body (:body opts)))))]
        (update request :body (partial m/decode "application/json")))))
 
   (test-endpoint :get "/v1/tournaments")
-  (sql/insert! db :tournament {:name "My tournament"
-                               :num-of-rounds 5})
-  )
+  (sql/insert! db :tournament {:name          "My tournament"
+                               :num-of-rounds 5}))
+

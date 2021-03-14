@@ -10,10 +10,8 @@
             [reitit.ring.middleware.muuntaja :as muuntaja]
             [reitit.ring.spec :as rs]
             [swiss-maker-back.tournament.routes :as tournament]
+            [swiss-maker-back.player.routes :as player]
             [reitit.ring.middleware.dev :as dev]))
-
-
-
 
 (def swagger-docs
   ["/swagger.json"
@@ -26,23 +24,24 @@
      :handler (swagger/create-swagger-handler)}}])
 
 (def router-config
-  {:validate rs/validate
+  {:validate  rs/validate
    :exception pretty/exception
-   :data {:coercion coercion-spec/coercion
-          :muuntaja m/instance
-          :middleware [swagger/swagger-feature
-                       muuntaja/format-middleware
-                       ;; exception/exception-middleware
-                       coercion/coerce-request-middleware
-                       coercion/coerce-response-middleware]}})
+   :data      {:coercion   coercion-spec/coercion
+               :muuntaja   m/instance
+               :middleware [swagger/swagger-feature
+                            muuntaja/format-middleware
+                            exception/exception-middleware
+                            coercion/coerce-request-middleware
+                            coercion/coerce-response-middleware]}})
 
 (defn routes
   [env]
   (ring/ring-handler
-   (ring/router
-    [swagger-docs
-     ["/v1"
-      (tournament/routes env)]]
-    router-config)
-   (ring/routes
-    (swagger-ui/create-swagger-ui-handler {:path "/"}))))
+    (ring/router
+      [swagger-docs
+       ["/v1"
+        (tournament/routes env)
+        (player/routes env)]]
+      router-config)
+    (ring/routes
+      (swagger-ui/create-swagger-ui-handler {:path "/"}))))

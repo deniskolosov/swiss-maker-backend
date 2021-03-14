@@ -4,8 +4,6 @@
 
 (defn get-all-tournaments
   [db]
-
-  (prn "Db:" db)
   (with-open [conn (jdbc/get-connection db)]
     (let [tournaments (sql/query conn ["select * from tournament"])]
       {:tournaments tournaments})))
@@ -14,6 +12,7 @@
 (defn insert-tournament!
   [db tournament]
   (sql/insert! db :tournament tournament))
+
 
 
 (defn get-tournament-by-id

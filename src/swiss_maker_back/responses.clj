@@ -11,10 +11,11 @@
    :tournament/current_round int?})
 
 (def player
-  {:player/id int?
-   :player/name string?
-   :player/rating int?
-   :player/score int?})
+  {:player/id            string?
+   :player/name          string?
+   :player/rating        int?
+   :player/current-score int?
+   :player/tournament-id int?})
 
 (def tournaments
   {:tournaments [tournament]})

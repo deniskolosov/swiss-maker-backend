@@ -7,19 +7,20 @@
   (let [db (:jdbc-url env)]
     ["/players" {:swagger {:tags ["players"]}}
      ["/:tournament-id"
-      ["" {:get {:handler (player/get-players db)
+      ["" {:get {:handler    (player/get-players db)
                  :parameters {:path {:tournament-id int?}}
-                 :responses {200 {:body responses/players}}
-                 :summary "Get tournament"}}]
+                 :responses  {200 {:body responses/players}}
+                 :summary    "Get players"}}]
       ["/:player-id"
-       ["" {:put {:handler (player/update-player! db)
-                  :parameters {:path {:player-id int?}
-                               :body {:name string?
-                                      :rating int?
-                                      :score int?}}
-                  :responses {204 {:body nil?}}
-                  :summary "Update player"}
-            :delete {:handler (player/delete-player! db)
-                     :parameters {:path {:player-id int?}}
-                     :responses {204 {:body nil?}}
-                     :summary "Delete player"}}]]]]))
+       ["" {:put    {:handler    (player/update-player! db)
+                     :parameters {:path {:player-id string?}
+                                  :body {:id            string?
+                                         :name          string?
+                                         :rating        int?
+                                         :current-score int?}}
+                     :responses  {204 {:body nil?}}
+                     :summary    "Update player"}
+            :delete {:handler    (player/delete-player! db)
+                     :parameters {:path {:player-id string?}}
+                     :responses  {204 {:body nil?}}
+                     :summary    "Delete player"}}]]]]))

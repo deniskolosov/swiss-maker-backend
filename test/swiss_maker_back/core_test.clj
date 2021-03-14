@@ -7,14 +7,30 @@
 (defn init-fixture []
   (let [db (-> @test-system :db/postgres )]
     (jdbc/execute! db [" drop table  if exists tournament cascade; "])
+    (jdbc/execute! db [" drop table  if exists player cascade; "])
     (jdbc/execute! db ["create table tournament (
                         id serial not null primary key,
                         name text,
                         num_of_rounds int not null,
                         current_round int check (current_round >= 0) default 0,
                         unique(id))"])
-    (sql/insert-multi! db :tournament [:name :num-of-rounds] [["First test tournament" 5]
-                                                              ["Second test tournament" 8]])))
+    (jdbc/execute! db ["create table player (
+                        id text not null primary key,
+                        name text,
+                        rating int check (rating >= 0) default 0,
+                        current_score int check (current_score >= 0) default 0,
+                        tournament_id int references tournament(id) on delete cascade,
+                        unique(id)
+)"])
+    (sql/insert-multi! db :tournament [:id :name :num-of-rounds] [[1 "First test tournament" 5]
+                                                                  [2 "Second test tournament" 8]])
+    (sql/insert-multi! db :player [:id :name :rating :current-score :tournament-id]
+                       [["11f0fe1d-893e-4559-b280-a324d173bce6" "Ivan Ivanov" 1200 3 1]
+                        ["aba04e95-6cad-4a1f-88cf-66f47f4557dc" "Semen Petrov" 1300 4 1]
+                        ["217cba35-bd06-4d8d-ae7b-d8b19e0a5dfe" "Petr Semenov" 1500 1 1]
+                        ["ebe758dc-2dad-4d91-bd72-61e64adc6693" "Ivan Ivanov" 1600 3 2]
+                        ["1bc49fbc-97ca-4ad0-9927-503651b5714e" "Semen Petrov" 1700 0 2]
+                        ["03f71105-ecc8-44a3-be2c-3574cb09507e" "Petr Semenov" 1350 5 2]])))
 
 (defn user-test-fixture
   [t]
@@ -27,17 +43,59 @@
 
 (deftest tournament-tests
   (testing "List tournaments"
-    (let [{:keys [status body]} (call-api :get "/v1/tournaments" nil nil)]
+    (let [{:keys [status body]} (call-api :get "v1/tournaments" nil nil)]
       (is (= 200 status))
-      (is (= [{:tournament/name "First test tournament",
-               :tournament/id 1,
+      (is (= [{:tournament/name          "First test tournament",
+               :tournament/id            1,
                :tournament/current_round 0,
                :tournament/num_of_rounds 5}
-              {:tournament/name "Second test tournament",
-               :tournament/id 2,
+              {:tournament/name          "Second test tournament",
+               :tournament/id            2,
                :tournament/current_round 0,
-               :tournament/num_of_rounds 8}] (:tournaments body))))))
+               :tournament/num_of_rounds 8}] (:tournaments body)))))
 
+  ;; TODO check why tournament is created in test_config ns and not here
+  (testing "Create tournament"
+    (let [{:keys [status body]} (call-api :post "v1/tournaments" nil {:name          "sdf"
+                                                                      :num-of-rounds 10})]
+      (is (= 201 status))
+      (is (= true (contains? body :tournament-id)))))
+  )
+
+(comment
+  )
+
+(deftest players-tests
+  (testing "Get players"
+    (let [{:keys [status body]} (call-api :get "v1/players/1" nil nil)]
+      (is (= 200 status))
+      (is (= [{:player/id            "11f0fe1d-893e-4559-b280-a324d173bce6",
+               :player/name          "Ivan Ivanov",
+               :player/rating        1200,
+               :player/current-score 3,
+               :player/tournament-id 1}
+              {:player/id            "aba04e95-6cad-4a1f-88cf-66f47f4557dc",
+               :player/name          "Semen Petrov",
+               :player/rating        1300,
+               :player/current-score 4,
+               :player/tournament-id 1}
+              {:player/id            "217cba35-bd06-4d8d-ae7b-d8b19e0a5dfe",
+               :player/name          "Petr Semenov",
+               :player/rating        1500,
+               :player/current-score 1,
+               :player/tournament-id 1}] (:players body)))))
+  (testing "Update player"
+    (let [request-body          {:id            "11f0fe1d-893e-4559-b280-a324d173bce6"
+                                 :name          "Ivan Ivanov"
+                                 :rating        1200
+                                 :current-score 5}
+          {:keys [status body]} (call-api :put "v1/players/1/11f0fe1d-893e-4559-b280-a324d173bce6" nil request-body)]
+      (is (= 204 status))
+      (is (= nil body))))
+  (testing "Delete player"
+    (let [{:keys [status body]} (call-api :delete "v1/players/1/11f0fe1d-893e-4559-b280-a324d173bce6" nil nil)]
+      (is (= 204 status))
+      (is (= nil body)))))
 
 (comment
   (call-api :get "/v1/tournaments" nil nil))
