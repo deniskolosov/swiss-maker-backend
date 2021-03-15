@@ -1,6 +1,8 @@
 (ns swiss-maker-back.player.handlers
   (:require [ring.util.response :as rr]
-            [swiss-maker-back.player.db :as player-db]))
+            [swiss-maker-back.player.db :as player-db]
+            [swiss-maker-back.responses :as responses])
+  (:import java.util.UUID))
 
 
 (defn get-players
@@ -13,6 +15,21 @@
         (rr/not-found {:type    "tournament-not-found"
                        :message "Tournament not found"
                        :data    (str "tournament-id" tournament-id)})))))
+
+(defn add-player!
+  [db]
+  (fn [request]
+    (let [tournament-id (-> request :parameters :path :tournament-id)
+          player        (-> request :parameters :body)
+          uid           (UUID/randomUUID)
+          new-player    (player-db/insert-player! db
+                                                  (-> player
+                                                      (assoc :tournament-id tournament-id)
+                                                      (assoc :id uid)))
+          player-id     (:player/id new-player)]
+      (rr/created (str responses/base-url "/tournaments/" tournament-id "/" player-id) new-player))))
+
+
 
 (defn update-player!
   [db]
@@ -29,13 +46,13 @@
                        :data    (str "tournament-id: " tournament-id "player-id: " player-id)})))))
 
 (defn delete-player!
-  [db]
-  (fn [request]
-    (let [player-id (-> request :parameters :path :player-id)
-          deleted?  (player-db/delete-player! db {:id player-id})
-          ]
-      (if deleted?
-        (rr/status 204)
-        (rr/not-found {:type    "player-not-found"
-                       :message "Player not found"
-                       :data    (str "player-id: " player-id)})))))
+[db]
+(fn [request]
+  (let [player-id (-> request :parameters :path :player-id)
+        deleted?  (player-db/delete-player! db {:id player-id})
+        ]
+    (if deleted?
+      (rr/status 204)
+      (rr/not-found {:type    "player-not-found"
+                     :message "Player not found"
+                     :data    (str "player-id: " player-id)})))))

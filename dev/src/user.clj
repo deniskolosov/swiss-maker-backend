@@ -7,6 +7,7 @@
             [next.jdbc :as jdbc]
             [next.jdbc.sql :as sql]
             [swiss-maker-back.tournament.db :refer [insert-tournament!]]
+            [swiss-maker-back.player.handlers :refer [add-player!]]
             [swiss-maker-back.tournament.handlers :refer [create-tournament!]]))
 
 (ig-repl/set-prep!
@@ -28,16 +29,20 @@
   (halt)
   (reset)
   (reset-all)
-  (jdbc/execute! db [(str "select id, name, rating, current_score from player where tournament_id = ?") 1])
-
-
+  (jdbc/execute! db ["truncate"])
+  (insert-tournament! db {:name "LEts gfooo" :num-of-rounds 10})
+  (jdbc/execute! db ["insert into tournament(name, num_of_rounds) values (?, ?)" "hello" 10])
+  ((add-player! db) {:parameters {:path {:tournament-id 1}
+                                  :body {:name          "Denis"
+                                         :rating        1000
+                                         :current-score 5}}})
 
 
   (set! *print-namespace-maps* false)
   (m/decode "application/json" (:body (app {:request-method :post
                                             :uri            "/v1/tournaments"
-                                            :body           {:num-of-rounds 5
-                                                             :name          "hello"}})))
+                                            :body           {"num-of-rounds" 5
+                                                             "ame"           "hello"}})))
   (sql/find-by-keys db :player {:tournament_id 1})
   (sql/find-by-keys db :tournament {:id 1})
   (-> (sql/update! db :player {:current-score 8} (select-keys {:id "867ed4bf-4628-48f4-944d-e6b7786bfa92"} [:id]))

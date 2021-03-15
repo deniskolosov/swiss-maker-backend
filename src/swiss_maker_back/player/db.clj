@@ -1,5 +1,6 @@
 (ns swiss-maker-back.player.db
-  (:require [next.jdbc.sql :as sql]))
+  (:require [next.jdbc :as jdbc]
+            [next.jdbc.sql :as sql]))
 
 (defn get-players-by-tournament-id
   [db tournament-id]
@@ -12,6 +13,12 @@
       :next.jdbc/update-count
       (pos?))
   )
+
+(defn insert-player!
+  [db {:keys [id name rating current-score, tournament-id]}]
+  (jdbc/execute-one! db ["insert into player(id, name, rating, current_score,
+                          tournament_id) values (?, ?, ?, ?, ?)"
+                         id name rating current-score, tournament-id] {:return-keys true}))
 
 (defn delete-player!
   [db player]

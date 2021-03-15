@@ -10,8 +10,8 @@
 
 
 (defn insert-tournament!
-  [db tournament]
-  (sql/insert! db :tournament tournament))
+  [db {:keys [name num-of-rounds]}]
+  (jdbc/execute-one! db ["insert into tournament(name, num_of_rounds) values (?, ?)" name num-of-rounds] {:return-keys true}))
 
 
 

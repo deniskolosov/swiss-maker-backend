@@ -63,8 +63,9 @@
 (comment
   (go)
   (call-api :get "v1/tournaments" nil nil)
-  (call-api :post "v1/tournaments" nil {:name          "sdf"
-                                        :num-of-rounds 10})
+  (call-api :post "v1/players/1/" nil {:name          "sdf"
+                                       :rating        1200
+                                       :current-score 10})
   (http-client/post "http://localhost:3000/v1/tournaments"
                     {:as               :json
                      :form-params      {:name          "hello"
@@ -73,6 +74,14 @@
                      :content-type     :json
                      :throw-exceptions true
                      :coerce           :always} [:status :body])
+  (http-client/post (str "http://localhost:" (-> @test-system :core/jetty .getConnectors first .getPort)
+                         "/v1/tournaments") {:as               :json
+                                             :form-params      {:name          "sdf"
+                                                                :rating        1200
+                                                                :current-score 10}
+                                             :throw-exceptions true
+                                             :content-type     :json} )
+
   (halt)
   (test-config)
   (keys (deref test-system))
@@ -89,21 +98,8 @@
 )"])
   (jdbc/execute! db ["select * from tournament"])
 
-  (call-api :put "/v1/players/11f0fe1d-893e-4559-b280-a324d173bce6" nil {:id            "11f0fe1d-893e-4559-b280-a324d173bce6"
-                                                                         :name          "Ivan Ivanov"
-                                                                         :rating        1200
-                                                                         :current-score 5})
-
-  (defn test-endpoint
-    ([method uri]
-     (test-endpoint method uri nil))
-    ([method uri opts]
-     (let [app     (-> @test-system :swiss-maker-back/app)
-           request (app (-> (mock/request method uri)
-                            (cond-> (:body opts) (mock/json-body (:body opts)))))]
-       (update request :body (partial m/decode "application/json")))))
-
-  (test-endpoint :get "/v1/tournaments")
+  (call-api :post "/v1/tournaments" nil {:name          "My tournamnent"
+                                         :num-of-rounds 10})
   (sql/insert! db :tournament {:name          "My tournament"
                                :num-of-rounds 5}))
 
