@@ -6,8 +6,9 @@ values (1, 'First tournament', 1);
 -- player
 truncate table player cascade;
 insert into player (id, "name", rating, tournament_id)
-values ('867ed4bf-4628-48f4-944d-e6b7786bfa92', 'Ivan Ivanov', 1000, 1),
-       ('867ed4b1-4628-48f4-944d-e6b7786bfa92', 'Petr Petrov', 1200, 1),
-       ('867ec4b2-4628-48f4-944d-e6b7786bfa92', 'Nikolay Kozlov', 1300, 1),
-       ('867e34b3-4628-48f4-944d-e6b7786bfa92', 'Fedor Sokolov', 1450, 1),
-       ('867ee4b4-4628-48f4-944d-e6b7786bfa92', 'Semen Fedorov', 1500, 1);
+values ('c6d60a7a-8997-419f-8a34-5edf719f0b5b', 'Ivan Ivanov', 1000, 1),
+       ('1ef53c2c-a326-4d43-8813-67f0c75ac055', 'Petr Petrov', 1200, 1),
+       ('c01c099c-1ec1-4350-a274-6f16772b1b54', 'Nikolay Kozlov', 1300, 1),
+       ('a0758ad6-1e7e-459c-9a80-5b8344c74978', 'Fedor Sokolov', 1450, 1),
+       ('df2330a4-0f4d-4603-a3a6-502b6a990dd1', 'Semen Fedorov', 1500, 1);
+

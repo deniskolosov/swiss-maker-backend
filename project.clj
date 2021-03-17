@@ -14,7 +14,8 @@
                  [metosin/muuntaja "0.6.8"]
                  [cheshire "5.10.0"]
                  [clj-http "3.12.1"]
-                 [org.clojure/tools.trace "0.7.11"]]
+                 [org.clojure/tools.trace "0.7.11"]
+                 [expound "0.8.9"]]
   :plugins [[cider/cider-nrepl "0.25.5"]]
   :profiles {:uberjar {:aot :all}
              :dev {:source-paths ["dev/src"]

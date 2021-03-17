@@ -29,7 +29,7 @@ create table pairing (
   white_id text not null references player(id) on delete cascade,
   black_id text not null references player(id) on delete cascade,
   board_no int not null check (board_no > 0),
-  result real,
+  result real default -1,
   tournament_id int references tournament(id) on delete cascade,
   round_no int not null check (round_no > 0),
   unique(id),

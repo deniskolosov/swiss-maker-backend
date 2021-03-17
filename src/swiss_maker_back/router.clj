@@ -11,16 +11,25 @@
             [reitit.ring.spec :as rs]
             [swiss-maker-back.tournament.routes :as tournament]
             [swiss-maker-back.player.routes :as player]
+            [swiss-maker-back.pairing.routes :as pairing]
+            [expound.alpha :as expound]
             [reitit.ring.middleware.dev :as dev]))
+
+(defn coercion-error-handler [status]
+  (let [printer (expound/custom-printer {:theme :figwheel-theme, :print-specs? false})
+        handler (exception/create-coercion-handler status)]
+    (fn [exception request]
+      (printer (-> exception ex-data :problems))
+      (handler exception request))))
 
 (def swagger-docs
   ["/swagger.json"
    {:get
-    {:no-doc true
+    {:no-doc  true
      :swagger {:basePath "/"
-               :info {:title "Swiss Maker API"
-                      :description "Api for Swiss Maker"
-                      :version "1.0.0"}}
+               :info     {:title       "Swiss Maker API"
+                          :description "Api for Swiss Maker"
+                          :version     "1.0.0"}}
      :handler (swagger/create-swagger-handler)}}])
 
 (def router-config
@@ -30,7 +39,12 @@
                :muuntaja   m/instance
                :middleware [swagger/swagger-feature
                             muuntaja/format-middleware
-                            exception/exception-middleware
+                            ;; exception/exception-middleware
+                            (exception/create-exception-middleware
+                              (merge
+                                exception/default-handlers
+                                {:reitit.coercion/request-coercion  (coercion-error-handler 400)
+                                 :reitit.coercion/response-coercion (coercion-error-handler 500)}))
                             coercion/coerce-request-middleware
                             coercion/coerce-response-middleware]}})
 
@@ -41,7 +55,8 @@
       [swagger-docs
        ["/v1"
         (tournament/routes env)
-        (player/routes env)]]
+        (player/routes env)
+        (pairing/routes env)]]
       router-config)
     (ring/routes
       (swagger-ui/create-swagger-ui-handler {:path "/"}))))
