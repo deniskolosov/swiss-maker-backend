@@ -32,6 +32,6 @@ create table pairing (
   result real default -1,
   tournament_id int references tournament(id) on delete cascade,
   round_no int not null check (round_no > 0),
-  unique(id),
+  unique(board_no, round_no, tournament_id),
   check (white_id <> black_id)
 );

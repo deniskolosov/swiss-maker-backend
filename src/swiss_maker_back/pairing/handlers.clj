@@ -21,5 +21,5 @@
   (fn [req]
     (let [tournament-id (-> req :parameters :path :tournament-id)
           round-no      (-> req :parameters :path :round-no)
-          pairing       (pairing-db/create-pairing-for-round! db tournament-id round-no)]
-      (rr/created (str responses/base-url "/pairings" (:id pairing)) pairing))))
+          pairing       (pairing-db/create-pairing! db tournament-id round-no)]
+      (rr/created (str responses/base-url "/pairings" (:id pairing)) {:pairing pairing}))))

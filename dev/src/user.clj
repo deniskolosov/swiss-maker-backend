@@ -110,17 +110,13 @@
   ;; using pair as example, return list of pairing maps
   ;; {:white-id string? :black-id string? :board-no int? :result (-2 or 0.5)
   ;;  :}
-  (defn create-pair
-    [b w]
-    (-> {}
-        (assoc :white-id (:id w))
-        (assoc :black-id (:id b))
-        (assoc :result -1)))
 
   (defn mid-element
     ;;  return mid-element of an odd-numbered list
     [l]
-    (l (quot (count l) 2)))
+    (nth l (quot (count l) 2)))
+
+  (pairing-db/create-pairing! db 1 1)
 
 
   (let [players
@@ -130,9 +126,12 @@
 
   ;; last player  will get a bye and won't appear in pairings
   (odd? ( count ( pair-players players')))
+  (pairing-db/same-color-twice? :black "c6d60a7a-8997-419f-8a34-5edf719f0b5b" db 3 1)
 
 
-  (pairing-db/first-round db 1 1)
+
+  (pairing-db/create-round db 1 1)
+  (pairing-db/create-pairing! db 1 1)
 
   ;; => (#:player{:id "c6d60a7a-8997-419f-8a34-5edf719f0b5b", :name "Ivan
   ;; Ivanov", :rating 1000, :current-score 0, :tournament-id 1} #:player{:id
@@ -146,6 +145,16 @@
   ;; :current-score 0, :tournament-id 1})
 
 
+  (def mylist '({:name "Denis" :age 10 } {:name "Ivan" :age 50} {:name "Boris" :age 21} {:name "Boris" :age 30}))
+  (rest (butlast (reverse mylist)))
+
+  ;; return a map which looks like {:name "Denis" :friends []}
+  (loop [people mylist
+         me     (first mylist)]
+    (let [candidate (first elements)]
+      (if (= (:age candidate) 10)
+        (print "hello")
+        (recur person (rest elements)))))
 
 
   (sql/find-by-keys db :player {:tournament_id 1})

@@ -13,7 +13,10 @@
        :post {:handler    (tournament/create-tournament! db)
               :parameters {:body {:name          string?
                                   :num-of-rounds int?}}
-              :responses  {201 {:body {:tournament/id int?}}}
+              :responses  {201 {:body {:tournament/id            int?
+                                       :tournament/name          string?
+                                       :tournament/num-of-rounds int?
+                                       :tournament/current-round int?}}}
               :summary    "Create tournament"}}]
      ["/:tournament-id"
       ["" {:get    {:handler    (tournament/get-tournament db)

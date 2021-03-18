@@ -31,7 +31,7 @@
   {:pairing [pair]})
 
 (def tournaments
-  {:tournaments [tournament]})
+{:tournaments [tournament]})
 
 (def players
-  {:players [player]})
+{:players [player]})
