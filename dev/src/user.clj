@@ -51,7 +51,6 @@
   (map-indexed #())
 
 
-  
   (defn create-pair
     ;; Create a pairing map
     [b w]

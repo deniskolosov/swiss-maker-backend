@@ -15,7 +15,8 @@
                  [cheshire "5.10.0"]
                  [clj-http "3.12.1"]
                  [org.clojure/tools.trace "0.7.11"]
-                 [expound "0.8.9"]]
+                 [expound "0.8.9"]
+                 [ring-cors "0.1.13"]]
   :plugins [[cider/cider-nrepl "0.25.5"]]
   :profiles {:uberjar {:aot :all}
              :dev {:source-paths ["dev/src"]

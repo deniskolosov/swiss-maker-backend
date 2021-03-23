@@ -12,6 +12,7 @@
             [swiss-maker-back.tournament.routes :as tournament]
             [swiss-maker-back.player.routes :as player]
             [swiss-maker-back.pairing.routes :as pairing]
+            [ring.middleware.cors :refer [wrap-cors]]
             [expound.alpha :as expound]
             [reitit.ring.middleware.dev :as dev]))
 
@@ -40,11 +41,14 @@
                :middleware [swagger/swagger-feature
                             muuntaja/format-middleware
                             ;; exception/exception-middleware
-                            (exception/create-exception-middleware
-                              (merge
-                                exception/default-handlers
-                                {:reitit.coercion/request-coercion  (coercion-error-handler 400)
-                                 :reitit.coercion/response-coercion (coercion-error-handler 500)}))
+                            #(wrap-cors %
+                                        :access-control-allow-origin [#".*"]
+                                        :access-control-allow-methods [:get :post])
+                            ;; (exception/create-exception-middleware
+                            ;;   (merge
+                            ;;     exception/default-handlers
+                            ;;     {:reitit.coercion/request-coercion  (coercion-error-handler 400)
+                            ;;      :reitit.coercion/response-coercion (coercion-error-handler 500)}))
                             coercion/coerce-request-middleware
                             coercion/coerce-response-middleware]}})
 
